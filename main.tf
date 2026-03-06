@@ -130,7 +130,7 @@ module "aks" {
   location            = module.network.resource_group_location
   resource_group_name = module.network.resource_group_name
   subnet_id           = module.network.subnet_id
-  node_count          = 2
+  node_count          = 3
 
   depends_on = [module.network]
 }
