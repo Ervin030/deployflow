@@ -89,12 +89,6 @@ variable "postgres_admin_password" {
   sensitive   = true
   default     = "P@ssw0rd2024!"
 }
-variable "keycloak_admin_password" {
-  description = "Mot de passe administrateur Keycloak"
-  type        = string
-  sensitive   = true
-  default     = "Keycloak@2024!"
-}
 variable "grafana_admin_password" {
   description = "Mot de passe administrateur Grafana"
   type        = string
@@ -162,21 +156,6 @@ module "argocd" {
 }
 
 # =============================================================================
-# Module : Keycloak (IAM/SSO - déployé via Kubernetes natif)
-# Image Quay.io officielle keycloak:26.0
-# =============================================================================
-module "keycloak" {
-  source = "../../modules/keycloak"
-
-  admin_password           = var.keycloak_admin_password
-  postgres_server_fqdn     = module.postgres.server_fqdn
-  postgres_admin_username  = "pgadmin"
-  postgres_admin_password  = var.postgres_admin_password
-
-  depends_on = [module.aks, module.postgres]
-}
-
-# =============================================================================
 # Module : Prometheus + Grafana (Monitoring - via ArgoCD)
 # Chart Helm kube-prometheus-stack
 # =============================================================================
@@ -225,10 +204,6 @@ output "postgres_server_fqdn" {
 output "argocd_namespace" {
   description = "Namespace ArgoCD"
   value       = module.argocd.namespace
-}
-output "keycloak_namespace" {
-  description = "Namespace Keycloak"
-  value       = module.keycloak.namespace
 }
 output "prometheus_namespace" {
   description = "Namespace Prometheus + Grafana"
