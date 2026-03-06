@@ -18,6 +18,10 @@ terraform {
       source  = "hashicorp/azurerm"
       version = "~> 4.0"
     }
+    kubernetes = {
+      source  = "hashicorp/kubernetes"
+      version = "~> 2.0"
+    }
   }
 }
 
@@ -34,6 +38,15 @@ provider "azurerm" {
   resource_provider_registrations = "none"
 }
 
+# --- Provider Kubernetes ---
+# Configuré dynamiquement à partir des credentials AKS
+provider "kubernetes" {
+  host                   = module.aks.kube_config_host
+  client_certificate     = base64decode(module.aks.kube_config_client_certificate)
+  client_key             = base64decode(module.aks.kube_config_client_key)
+  cluster_ca_certificate = base64decode(module.aks.kube_config_cluster_ca_certificate)
+}
+
 # =============================================================================
 # Variables
 # =============================================================================
@@ -42,6 +55,11 @@ variable "postgres_admin_password" {
   type        = string
   sensitive   = true
   default     = "P@ssw0rd2024!"
+}
+variable "odoo_image_token" {
+  description = "Token d'authentification pour l'image Docker Odoo Enterprise"
+  type        = string
+  sensitive   = true
 }
 
 # =============================================================================
@@ -89,6 +107,24 @@ module "postgres" {
 }
 
 # =============================================================================
+# Module : Odoo (ERP - déployé via Kubernetes natif)
+# Image Docker officielle odoo:18.0
+# =============================================================================
+module "odoo" {
+  source = "../../modules/odoo-helm"
+
+  postgres_host     = module.postgres.server_fqdn
+  postgres_user     = "pgadmin"
+  postgres_password = var.postgres_admin_password
+  postgres_database = module.postgres.database_name
+  edition           = "enterprise"
+  image_url         = "ghcr.io/cellenza-lu/lu.cellenza.deployflow.infra/odoo-enterprise:19.0"
+  image_token       = var.odoo_image_token
+
+  depends_on = [module.aks, module.postgres]
+}
+
+# =============================================================================
 # Outputs
 # =============================================================================
 output "resource_group_name" {
@@ -102,4 +138,8 @@ output "aks_cluster_name" {
 output "postgres_server_fqdn" {
   description = "FQDN du serveur PostgreSQL"
   value       = module.postgres.server_fqdn
+}
+output "odoo_namespace" {
+  description = "Namespace Odoo"
+  value       = module.odoo.namespace
 }
