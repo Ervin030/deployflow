@@ -62,6 +62,11 @@ variable "keycloak_admin_password" {
   sensitive   = true
   default     = "Keycloak@2024!"
 }
+variable "odoo_image_token" {
+  description = "Token d'authentification pour l'image Docker Odoo Enterprise"
+  type        = string
+  sensitive   = true
+}
 
 # =============================================================================
 # Module : Network (toujours inclus)
@@ -123,6 +128,24 @@ module "keycloak" {
 }
 
 # =============================================================================
+# Module : Odoo (ERP - déployé via Kubernetes natif)
+# Image Docker officielle odoo:18.0
+# =============================================================================
+module "odoo" {
+  source = "../../modules/odoo-helm"
+
+  postgres_host     = module.postgres.server_fqdn
+  postgres_user     = "pgadmin"
+  postgres_password = var.postgres_admin_password
+  postgres_database = module.postgres.database_name
+  edition           = "enterprise"
+  image_url         = "ghcr.io/cellenza-lu/lu.cellenza.deployflow.infra/odoo-enterprise:19.0"
+  image_token       = var.odoo_image_token
+
+  depends_on = [module.aks, module.postgres]
+}
+
+# =============================================================================
 # Outputs
 # =============================================================================
 output "resource_group_name" {
@@ -140,4 +163,8 @@ output "postgres_server_fqdn" {
 output "keycloak_namespace" {
   description = "Namespace Keycloak"
   value       = module.keycloak.namespace
+}
+output "odoo_namespace" {
+  description = "Namespace Odoo"
+  value       = module.odoo.namespace
 }
