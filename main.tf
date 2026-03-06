@@ -22,18 +22,6 @@ terraform {
       source  = "hashicorp/kubernetes"
       version = "~> 2.0"
     }
-    helm = {
-      source  = "hashicorp/helm"
-      version = "~> 3.0"
-    }
-    time = {
-      source  = "hashicorp/time"
-      version = ">= 0.9"
-    }
-    kubectl = {
-      source  = "alekc/kubectl"
-      version = "~> 2.1"
-    }
   }
 }
 
@@ -59,27 +47,6 @@ provider "kubernetes" {
   cluster_ca_certificate = base64decode(module.aks.kube_config_cluster_ca_certificate)
 }
 
-# --- Provider Helm ---
-# Utilisé pour installer ArgoCD via Helm chart
-provider "helm" {
-  kubernetes = {
-    host                   = module.aks.kube_config_host
-    client_certificate     = base64decode(module.aks.kube_config_client_certificate)
-    client_key             = base64decode(module.aks.kube_config_client_key)
-    cluster_ca_certificate = base64decode(module.aks.kube_config_cluster_ca_certificate)
-  }
-}
-
-# --- Provider kubectl ---
-# Utilisé pour créer les CRDs ArgoCD Application
-provider "kubectl" {
-  host                   = module.aks.kube_config_host
-  client_certificate     = base64decode(module.aks.kube_config_client_certificate)
-  client_key             = base64decode(module.aks.kube_config_client_key)
-  cluster_ca_certificate = base64decode(module.aks.kube_config_cluster_ca_certificate)
-  load_config_file       = false
-}
-
 # =============================================================================
 # Variables
 # =============================================================================
@@ -94,17 +61,6 @@ variable "keycloak_admin_password" {
   type        = string
   sensitive   = true
   default     = "Keycloak@2024!"
-}
-variable "grafana_admin_password" {
-  description = "Mot de passe administrateur Grafana"
-  type        = string
-  sensitive   = true
-  default     = "Grafana@2024!"
-}
-variable "odoo_image_token" {
-  description = "Token d'authentification pour l'image Docker Odoo Enterprise"
-  type        = string
-  sensitive   = true
 }
 
 # =============================================================================
@@ -152,16 +108,6 @@ module "postgres" {
 }
 
 # =============================================================================
-# Module : ArgoCD (GitOps - orchestrateur des applications)
-# Installé via Helm sur le cluster AKS
-# =============================================================================
-module "argocd" {
-  source = "../../modules/argocd"
-
-  depends_on = [module.aks]
-}
-
-# =============================================================================
 # Module : Keycloak (IAM/SSO - déployé via Kubernetes natif)
 # Image Quay.io officielle keycloak:26.0
 # =============================================================================
@@ -172,37 +118,6 @@ module "keycloak" {
   postgres_server_fqdn     = module.postgres.server_fqdn
   postgres_admin_username  = "pgadmin"
   postgres_admin_password  = var.postgres_admin_password
-
-  depends_on = [module.aks, module.postgres]
-}
-
-# =============================================================================
-# Module : Prometheus + Grafana (Monitoring - via ArgoCD)
-# Chart Helm kube-prometheus-stack
-# =============================================================================
-module "prometheus" {
-  source = "../../modules/prometheus"
-
-  argocd_namespace       = module.argocd.namespace
-  grafana_admin_password = var.grafana_admin_password
-
-  depends_on = [module.aks, module.argocd]
-}
-
-# =============================================================================
-# Module : Odoo (ERP - déployé via Kubernetes natif)
-# Image Docker officielle odoo:18.0
-# =============================================================================
-module "odoo" {
-  source = "../../modules/odoo-helm"
-
-  postgres_host     = module.postgres.server_fqdn
-  postgres_user     = "pgadmin"
-  postgres_password = var.postgres_admin_password
-  postgres_database = module.postgres.database_name
-  edition           = "enterprise"
-  image_url         = "ghcr.io/cellenza-lu/lu.cellenza.deployflow.infra/odoo-enterprise:19.0"
-  image_token       = var.odoo_image_token
 
   depends_on = [module.aks, module.postgres]
 }
@@ -222,19 +137,7 @@ output "postgres_server_fqdn" {
   description = "FQDN du serveur PostgreSQL"
   value       = module.postgres.server_fqdn
 }
-output "argocd_namespace" {
-  description = "Namespace ArgoCD"
-  value       = module.argocd.namespace
-}
 output "keycloak_namespace" {
   description = "Namespace Keycloak"
   value       = module.keycloak.namespace
-}
-output "prometheus_namespace" {
-  description = "Namespace Prometheus + Grafana"
-  value       = module.prometheus.namespace
-}
-output "odoo_namespace" {
-  description = "Namespace Odoo"
-  value       = module.odoo.namespace
 }
