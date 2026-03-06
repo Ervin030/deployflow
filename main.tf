@@ -22,14 +22,6 @@ terraform {
       source  = "hashicorp/kubernetes"
       version = "~> 2.0"
     }
-    helm = {
-      source  = "hashicorp/helm"
-      version = "~> 3.0"
-    }
-    time = {
-      source  = "hashicorp/time"
-      version = ">= 0.9"
-    }
   }
 }
 
@@ -55,17 +47,6 @@ provider "kubernetes" {
   cluster_ca_certificate = base64decode(module.aks.kube_config_cluster_ca_certificate)
 }
 
-# --- Provider Helm ---
-# Utilisé pour installer ArgoCD via Helm chart
-provider "helm" {
-  kubernetes = {
-    host                   = module.aks.kube_config_host
-    client_certificate     = base64decode(module.aks.kube_config_client_certificate)
-    client_key             = base64decode(module.aks.kube_config_client_key)
-    cluster_ca_certificate = base64decode(module.aks.kube_config_cluster_ca_certificate)
-  }
-}
-
 # =============================================================================
 # Variables
 # =============================================================================
@@ -74,12 +55,6 @@ variable "postgres_admin_password" {
   type        = string
   sensitive   = true
   default     = "P@ssw0rd2024!"
-}
-variable "keycloak_admin_password" {
-  description = "Mot de passe administrateur Keycloak"
-  type        = string
-  sensitive   = true
-  default     = "Keycloak@2024!"
 }
 variable "odoo_image_token" {
   description = "Token d'authentification pour l'image Docker Odoo Enterprise"
@@ -132,31 +107,6 @@ module "postgres" {
 }
 
 # =============================================================================
-# Module : ArgoCD (GitOps - orchestrateur des applications)
-# Installé via Helm sur le cluster AKS
-# =============================================================================
-module "argocd" {
-  source = "../../modules/argocd"
-
-  depends_on = [module.aks]
-}
-
-# =============================================================================
-# Module : Keycloak (IAM/SSO - déployé via Kubernetes natif)
-# Image Quay.io officielle keycloak:26.0
-# =============================================================================
-module "keycloak" {
-  source = "../../modules/keycloak"
-
-  admin_password           = var.keycloak_admin_password
-  postgres_server_fqdn     = module.postgres.server_fqdn
-  postgres_admin_username  = "pgadmin"
-  postgres_admin_password  = var.postgres_admin_password
-
-  depends_on = [module.aks, module.postgres]
-}
-
-# =============================================================================
 # Module : Odoo (ERP - déployé via Kubernetes natif)
 # Image Docker officielle odoo:18.0
 # =============================================================================
@@ -188,14 +138,6 @@ output "aks_cluster_name" {
 output "postgres_server_fqdn" {
   description = "FQDN du serveur PostgreSQL"
   value       = module.postgres.server_fqdn
-}
-output "argocd_namespace" {
-  description = "Namespace ArgoCD"
-  value       = module.argocd.namespace
-}
-output "keycloak_namespace" {
-  description = "Namespace Keycloak"
-  value       = module.keycloak.namespace
 }
 output "odoo_namespace" {
   description = "Namespace Odoo"

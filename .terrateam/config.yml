@@ -4,9 +4,39 @@
 workflows:
   - tag_query: ""
     plan:
+      - type: env
+        name: ARM_CLIENT_ID
+        cmd: ['echo', '${{ secrets.ARM_CLIENT_ID }}']
+      - type: env
+        name: ARM_CLIENT_SECRET
+        cmd: ['echo', '${{ secrets.ARM_CLIENT_SECRET }}']
+      - type: env
+        name: ARM_SUBSCRIPTION_ID
+        cmd: ['echo', '${{ secrets.ARM_SUBSCRIPTION_ID }}']
+      - type: env
+        name: ARM_TENANT_ID
+        cmd: ['echo', '${{ secrets.ARM_TENANT_ID }}']
+      - type: env
+        name: TF_VAR_odoo_image_token
+        cmd: ['echo', '${{ secrets.TF_VAR_odoo_image_token }}']
       - type: init
       - type: plan
     apply:
+      - type: env
+        name: ARM_CLIENT_ID
+        cmd: ['echo', '${{ secrets.ARM_CLIENT_ID }}']
+      - type: env
+        name: ARM_CLIENT_SECRET
+        cmd: ['echo', '${{ secrets.ARM_CLIENT_SECRET }}']
+      - type: env
+        name: ARM_SUBSCRIPTION_ID
+        cmd: ['echo', '${{ secrets.ARM_SUBSCRIPTION_ID }}']
+      - type: env
+        name: ARM_TENANT_ID
+        cmd: ['echo', '${{ secrets.ARM_TENANT_ID }}']
+      - type: env
+        name: TF_VAR_odoo_image_token
+        cmd: ['echo', '${{ secrets.TF_VAR_odoo_image_token }}']
       - type: init
       - type: apply
 
