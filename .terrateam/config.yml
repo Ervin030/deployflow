@@ -16,9 +16,6 @@ workflows:
       - type: env
         name: ARM_TENANT_ID
         cmd: ['echo', '${{ secrets.ARM_TENANT_ID }}']
-      - type: env
-        name: TF_VAR_odoo_image_token
-        cmd: ['echo', '${{ secrets.TF_VAR_odoo_image_token }}']
       - type: init
       - type: plan
     apply:
@@ -34,9 +31,6 @@ workflows:
       - type: env
         name: ARM_TENANT_ID
         cmd: ['echo', '${{ secrets.ARM_TENANT_ID }}']
-      - type: env
-        name: TF_VAR_odoo_image_token
-        cmd: ['echo', '${{ secrets.TF_VAR_odoo_image_token }}']
       - type: init
       - type: apply
 
