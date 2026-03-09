@@ -1,6 +1,14 @@
 name: Terrateam
 on:
   workflow_dispatch:
+    inputs:
+      work-token:
+        description: 'Work token for run'
+        required: true
+      api-base-url:
+        description: 'Base URL to API'
+        required: true
+        default: 'https://app.terrateam.io'
   pull_request:
     types:
       - opened
@@ -24,6 +32,7 @@ jobs:
     name: Terrateam Action
     steps:
       - uses: actions/checkout@v4
-      - uses: terrateam/action@v1
+      - uses: terrateamio/action@v1
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+          work-token: '${{ github.event.inputs.work-token }}'
+          api-base-url: '${{ github.event.inputs.api-base-url }}'
