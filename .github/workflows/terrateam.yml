@@ -1,0 +1,29 @@
+name: Terrateam
+on:
+  workflow_dispatch:
+  pull_request:
+    types:
+      - opened
+      - synchronize
+      - reopened
+      - closed
+  issue_comment:
+    types:
+      - created
+
+jobs:
+  terrateam:
+    permissions:
+      id-token: write
+      contents: read
+      pull-requests: write
+      issues: read
+      statuses: write
+    runs-on: ubuntu-latest
+    timeout-minutes: 1440
+    name: Terrateam Action
+    steps:
+      - uses: actions/checkout@v4
+      - uses: terrateam/action@v1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
