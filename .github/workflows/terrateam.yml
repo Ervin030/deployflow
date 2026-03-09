@@ -36,3 +36,9 @@ jobs:
         with:
           work-token: '${{ github.event.inputs.work-token }}'
           api-base-url: '${{ github.event.inputs.api-base-url }}'
+        env:
+          ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
+          ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+          ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+          ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
+          TF_VAR_ODOO_IMAGE_TOKEN: ${{ secrets.TF_VAR_ODOO_IMAGE_TOKEN }}
